@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class DBHelper
 {
   late Database db;
+  final String DB_NAME = "fg_db.db";
 
   Future open(String path) async
   {
@@ -26,23 +27,15 @@ class DBHelper
 
   Future <List<InspectionItem>> getAllInspectionItems () async
   {
-    await open("fg_db.db");
+    await open(DB_NAME);
 
     List <InspectionItem> inspectionItems = [];
 
-    List<Map> result = await db.query(InspectionItem.myClassName);
+    var result = await db.rawQuery("SELECT * FROM ${InspectionItem.myClassName}");
 
     result.forEach((row)
     {
-      InspectionItem item = InspectionItem(
-          id: row[INSPECTION_ITEM_FIELDS.id.name],
-          title: row[INSPECTION_ITEM_FIELDS.title.name],
-          description: row[INSPECTION_ITEM_FIELDS.description.name],
-          dateTime: DateTime.parse(row[INSPECTION_ITEM_FIELDS.dateTime.name]),
-          status: (row[INSPECTION_ITEM_FIELDS.status.name] == 1) ? true : false,
-          picture: row[INSPECTION_ITEM_FIELDS.picture.name]
-      );
-
+      InspectionItem item = InspectionItem.fromMap(row);
       inspectionItems.add(item);
     });
 
@@ -52,7 +45,7 @@ class DBHelper
 
   Future<InspectionItem> insertInspectionItem (InspectionItem item) async
   {
-    await open("fg_db.db");
+    await open(DB_NAME);
 
     item.id = await db.insert(InspectionItem.myClassName, item.toMap());
 
@@ -63,7 +56,7 @@ class DBHelper
 
   Future<InspectionItem?> getInspectionItem (int id) async
   {
-    await open("fg_db.db");
+    await open(DB_NAME);
 
     List<Map> maps = await db.query(InspectionItem.myClassName,
         columns: [
@@ -88,7 +81,7 @@ class DBHelper
 
   Future<int> deleteInspectionItem (int id) async
   {
-    await open("fg_db.db");
+    await open(DB_NAME);
     int status = await db.delete(InspectionItem.myClassName, where: '${INSPECTION_ITEM_FIELDS.id.name} = ?', whereArgs: [id]);
     close();
     return status;
@@ -96,7 +89,7 @@ class DBHelper
 
   Future<int> updateInspectionItem (InspectionItem item) async
   {
-    await open("fg_db.db");
+    await open(DB_NAME);
 
     int status = await db.update(InspectionItem.myClassName, item.toMap(),
         where: '${INSPECTION_ITEM_FIELDS.id.name} = ?', whereArgs: [item.id]);

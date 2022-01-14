@@ -1,16 +1,17 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:fg_task/Model/Components/inspection_item.dart';
 import 'package:fg_task/Model/Database/db_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class MainScreenViewModel with ChangeNotifier
 {
   final DBHelper _dbHelper = DBHelper();
 
-  Uint8List? takenImage;
+  String? takenImagePath;
 
   InspectionItem? _selectedItem;
   int? _selectedItemIndex;
@@ -36,25 +37,35 @@ class MainScreenViewModel with ChangeNotifier
     return formatted;
   }
 
-  void pickImageFromCamera () async
+  void pickImageAndSaveToLocalStorage (String fileName) async
   {
-    ImagePicker _picker = ImagePicker();
-    XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-    takenImage = await photo!.readAsBytes();
+    PickedFile? myImage = await _pickImageFromCamera();
+    // takenImagePath = await _saveFile(fileName, myImage!);
 
     notifyListeners();
   }
 
-  /// DONE
-  void insertInspectionItemsTest (List <InspectionItem> items) async
+  Future <PickedFile?> _pickImageFromCamera () async
   {
-    for (InspectionItem itr in items)
-    {
-      InspectionItem i = await _dbHelper.insertInspectionItem(itr);
-      print("the item ${i.title} is ${i.id}");
-    }
+    ImagePicker _picker = ImagePicker();
+    return await _picker.getImage(source: ImageSource.camera);
+  }
 
-    // notifyListeners();
+  Future <String> _saveFile(String fileName, PickedFile image) async
+  {
+    String imagePath = await _getFilePath(fileName);
+    File file = File(imagePath);
+    file.writeAsBytes(await image.readAsBytes());
+
+    return imagePath;
+  }
+
+  Future<String> _getFilePath(String fileName) async {
+    Directory appDocumentsDirectory = await getApplicationDocumentsDirectory();
+    String appDocumentsPath = appDocumentsDirectory.path;
+    String filePath = '$appDocumentsPath/$fileName';
+
+    return filePath;
   }
 
   void getInspectionItems () async
@@ -65,7 +76,7 @@ class MainScreenViewModel with ChangeNotifier
 
   void addInspectionItem (String title, String description, BuildContext context) async
   {
-    if (takenImage == null)
+    if (takenImagePath!.isEmpty)
     {
       var snackBar = const SnackBar(content: Text('You should pick an image'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -75,7 +86,7 @@ class MainScreenViewModel with ChangeNotifier
     InspectionItem item = InspectionItem(
       title: title,
       description: description,
-      picture: String.fromCharCodes(takenImage!),
+      picture: takenImagePath,
       dateTime: DateTime.now(),
       status: true
     );

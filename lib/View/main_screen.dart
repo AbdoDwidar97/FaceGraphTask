@@ -1,7 +1,5 @@
-import 'dart:typed_data';
-
+import 'dart:io';
 import 'package:fg_task/Constants/app_colors.dart';
-import 'package:fg_task/Model/Components/inspection_item.dart';
 import 'package:fg_task/View/insertion_update_screen.dart';
 import 'package:fg_task/ViewModel/main_screen_view_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -106,7 +104,7 @@ class MainScreenState extends State <MainScreen>
 
                         SizedBox(height: heightUnit),
 
-                        Image.memory(Uint8List.fromList(mainActivityViewModel.inspectionItems[itemIndex].picture.codeUnits)),
+                        Image.file(File(mainActivityViewModel.inspectionItems[itemIndex].picture)),
 
                         SizedBox(height: heightUnit),
 

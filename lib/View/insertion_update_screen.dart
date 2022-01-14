@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:fg_task/Model/Components/inspection_item.dart';
 import 'package:fg_task/ViewModel/main_screen_view_model.dart';
 import 'package:fg_task/app_ui.dart';
@@ -75,7 +76,9 @@ class InsertionUpdateScreen extends StatelessWidget
               SizedBox(height: heightUnit),
 
               Consumer <MainScreenViewModel>(
-                  builder: (context, viewModel, child) => (viewModel.takenImage == null) ? const SizedBox() : Image.memory(viewModel.takenImage!)
+                  builder: (context, viewModel, child) => (viewModel.takenImagePath!.isEmpty) ?
+                  const SizedBox() :
+                  Image.file(File(viewModel.takenImagePath!))
               ),
 
               SizedBox(height: heightUnit),
@@ -99,7 +102,8 @@ class InsertionUpdateScreen extends StatelessWidget
 
   void btnPicture () async
   {
-    _mainScreenViewModel.pickImageFromCamera();
+    String title = titleController.text.trim();
+    _mainScreenViewModel.pickImageAndSaveToLocalStorage("$title.png");
   }
 
   void btnSave ()
@@ -115,7 +119,7 @@ class InsertionUpdateScreen extends StatelessWidget
     else {
       InspectionItem item = InspectionItem(
         id: _mainScreenViewModel.selectedItem.id,
-        picture: String.fromCharCodes(_mainScreenViewModel.takenImage!),
+        picture: _mainScreenViewModel.takenImagePath!,
         dateTime: _mainScreenViewModel.selectedItem.dateTime,
         status: status,
         title: title,
